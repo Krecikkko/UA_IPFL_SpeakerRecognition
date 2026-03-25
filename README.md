@@ -1,0 +1,1 @@
+# UA_Proj_IPFL_SpeechRecognition
