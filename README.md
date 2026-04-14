@@ -1,1 +1,1 @@
-# UA_Proj_IPFL_SpeechRecognition
+# UA_IPFL_SpeakerRecognition
