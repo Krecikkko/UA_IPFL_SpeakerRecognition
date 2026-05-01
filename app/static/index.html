@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Speaker Recognition Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #f5f5f5;
+      color: #111;
+    }
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    }
+    h1, h2, p {
+      margin-top: 0;
+    }
+    button {
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    input[type="file"] {
+      margin-bottom: 14px;
+    }
+    .primary { background: #2563eb; color: white; }
+    .danger { background: #dc2626; color: white; }
+    .muted { background: #e5e7eb; color: #111; }
+    .result {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+    .scores {
+      margin-top: 12px;
+    }
+    .score-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 90px;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .bar {
+      width: 100%;
+      height: 16px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar > div {
+      height: 100%;
+      background: #2563eb;
+      width: 0%;
+    }
+    #status {
+      min-height: 24px;
+      color: #444;
+    }
+    audio {
+      width: 100%;
+      margin-top: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0f172a; color: #e5e7eb; }
+      .card { background: #111827; box-shadow: none; }
+      .muted { background: #374151; color: #f3f4f6; }
+      #status { color: #cbd5e1; }
+      .bar { background: #374151; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Speaker Recognition Demo</h1>
+      <p>Upload an audio file or record a short sample with your microphone. The backend will convert it to 16 kHz mono WAV, extract a speaker embedding, and compare it to your enrolled speakers.</p>
+      <div id="status">Ready.</div>
+    </div>
+
+    <div class="card">
+      <h2>Upload audio file</h2>
+      <input id="fileInput" type="file" accept="audio/*" />
+      <br />
+      <button id="uploadBtn" class="primary">Predict from file</button>
+    </div>
+
+    <div class="card">
+      <h2>Record from microphone</h2>
+      <button id="startBtn" class="primary">Start recording</button>
+      <button id="stopBtn" class="danger" disabled>Stop recording</button>
+      <audio id="player" controls></audio>
+      <div style="margin-top: 10px;">
+        <button id="predictRecordingBtn" class="muted" disabled>Predict from recorded audio</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Prediction</h2>
+      <div id="prediction" class="result">No prediction yet.</div>
+      <div id="scores" class="scores"></div>
+    </div>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const predictionEl = document.getElementById("prediction");
+    const scoresEl = document.getElementById("scores");
+    const fileInput = document.getElementById("fileInput");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const predictRecordingBtn = document.getElementById("predictRecordingBtn");
+    const player = document.getElementById("player");
+
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordedBlob = null;
+
+    function setStatus(msg) {
+      statusEl.textContent = msg;
+    }
+
+    function renderPrediction(data) {
+      predictionEl.textContent = `Predicted speaker: ${data.predicted_speaker}`;
+      scoresEl.innerHTML = "";
+
+      const ranking = data.ranking || [];
+      const maxScore = ranking.length ? Math.max(...ranking.map(x => x.score)) : 1;
+
+      ranking.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "score-row";
+
+        const label = document.createElement("div");
+        label.textContent = item.speaker;
+
+        const bar = document.createElement("div");
+        bar.className = "bar";
+
+        const fill = document.createElement("div");
+        const normalized = maxScore <= 0 ? 0 : (item.score / maxScore) * 100;
+        fill.style.width = `${Math.max(0, normalized)}%`;
+
+        bar.appendChild(fill);
+
+        const value = document.createElement("div");
+        value.textContent = item.score.toFixed(3);
+
+        row.appendChild(label);
+        row.appendChild(bar);
+        row.appendChild(value);
+
+        scoresEl.appendChild(row);
+      });
+    }
+
+    async function predictFromBlob(blob, filename) {
+      const form = new FormData();
+      form.append("file", blob, filename);
+
+      setStatus("Sending audio to backend...");
+      predictionEl.textContent = "Working...";
+      scoresEl.innerHTML = "";
+
+      const response = await fetch("/predict", {
+        method: "POST",
+        body: form,
+      });
+
+      if (!response.ok) {
+        let detail = `HTTP ${response.status}`;
+        try {
+          const payload = await response.json();
+          detail = payload.detail || detail;
+        } catch (_) {}
+        throw new Error(detail);
+      }
+
+      const data = await response.json();
+      renderPrediction(data);
+      setStatus(`Done. File: ${data.filename}`);
+    }
+
+    uploadBtn.addEventListener("click", async () => {
+      const file = fileInput.files?.[0];
+      if (!file) {
+        setStatus("Choose an audio file first.");
+        return;
+      }
+
+      try {
+        await predictFromBlob(file, file.name);
+      } catch (err) {
+        setStatus(`Error: ${err.message}`);
+      }
+    });
+
+    startBtn.addEventListener("click", async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordedChunks = [];
+        recordedBlob = null;
+
+        const mimeType =
+          MediaRecorder.isTypeSupported("audio/webm")
+            ? "audio/webm"
+            : "";
+
+        mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            recordedChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          recordedBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+          const url = URL.createObjectURL(recordedBlob);
+          player.src = url;
+          predictRecordingBtn.disabled = false;
+
+          stream.getTracks().forEach(track => track.stop());
+          setStatus("Recording stopped.");
+        };
+
+        mediaRecorder.start();
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        predictRecordingBtn.disabled = true;
+        setStatus("Recording...");
+      } catch (err) {
+        setStatus(`Microphone error: ${err.message}`);
+      }
+    });
+
+    stopBtn.addEventListener("click", () => {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    });
+
+    predictRecordingBtn.addEventListener("click", async () => {
+      if (!recordedBlob) {
+        setStatus("No recording available.");
+        return;
+      }
+
+      try {
+        await predictFromBlob(recordedBlob, "recording.webm");
+      } catch (err) {
+        setStatus(`Error: ${err.message}`);
+      }
+    });
+  </script>
+</body>
+</html>
