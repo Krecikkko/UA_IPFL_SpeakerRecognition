@@ -2,118 +2,338 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Speaker Recognition Demo</title>
+  <title>Speaker Recognition</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
     :root {
+      --bg-color: #f8fafc;
+      --text-color: #0f172a;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-border: rgba(255, 255, 255, 0.5);
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --muted: #e2e8f0;
+      --muted-text: #475569;
+      --bar-bg: #e2e8f0;
+      --font-family: 'Outfit', sans-serif;
       color-scheme: light dark;
-      font-family: Arial, sans-serif;
     }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #0f172a;
+        --text-color: #f8fafc;
+        --card-bg: rgba(30, 41, 59, 0.7);
+        --card-border: rgba(255, 255, 255, 0.1);
+        --primary: #6366f1;
+        --primary-hover: #818cf8;
+        --danger: #ef4444;
+        --danger-hover: #f87171;
+        --muted: #334155;
+        --muted-text: #94a3b8;
+        --bar-bg: #334155;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      padding: 24px;
-      background: #f5f5f5;
-      color: #111;
+      padding: 0;
+      background-color: var(--bg-color);
+      background-image: 
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-color);
+      font-family: var(--font-family);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 40px;
+      padding-bottom: 40px;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
+
+    @media (prefers-color-scheme: light) {
+      body {
+        background-image: 
+          radial-gradient(at 0% 0%, hsla(253,16%,97%,1) 0, transparent 50%), 
+          radial-gradient(at 50% 0%, hsla(225,39%,80%,1) 0, transparent 50%), 
+          radial-gradient(at 100% 0%, hsla(339,49%,80%,1) 0, transparent 50%);
+      }
+    }
+
     .wrap {
-      max-width: 900px;
-      margin: 0 auto;
+      width: 100%;
+      max-width: 800px;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
     }
+
     .card {
-      background: white;
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 18px;
-      box-shadow: 0 4px 16px rgba(0,0,0,.08);
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
+      animation: slideUp 0.6s ease-out forwards;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
-    h1, h2, p {
+    
+    .card:nth-child(1) { animation-delay: 0.1s; }
+    .card:nth-child(2) { animation-delay: 0.2s; }
+    .card:nth-child(3) { animation-delay: 0.3s; }
+    .card:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes slideUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
       margin-top: 0;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--primary) 0%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
+
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-top: 0;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 24px;
+      line-height: 1.6;
+      color: var(--muted-text);
+      font-size: 1.05rem;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
     button {
-      padding: 10px 16px;
-      border: 0;
-      border-radius: 10px;
+      font-family: var(--font-family);
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 12px;
       cursor: pointer;
-      margin-right: 10px;
-      margin-bottom: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .primary { background: var(--primary); color: white; }
+    .primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .danger { background: var(--danger); color: white; }
+    .danger:hover:not(:disabled) { background: var(--danger-hover); }
+    .muted { background: var(--muted); color: var(--text-color); }
+    .muted:hover:not(:disabled) { filter: brightness(0.95); }
+
+    .file-input-wrapper {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
     input[type="file"] {
-      margin-bottom: 14px;
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-family: var(--font-family);
+      color: var(--text-color);
+      background: var(--muted);
+      border: 1px dashed var(--muted-text);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color 0.3s;
     }
-    .primary { background: #2563eb; color: white; }
-    .danger { background: #dc2626; color: white; }
-    .muted { background: #e5e7eb; color: #111; }
-    .result {
-      font-size: 1.1rem;
-      font-weight: bold;
+
+    input[type="file"]:hover {
+      border-color: var(--primary);
+    }
+    
+    input[type="file"]::file-selector-button {
+      font-family: var(--font-family);
+      font-weight: 500;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      margin-right: 16px;
+      transition: background 0.2s;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: var(--primary-hover);
+    }
+
+    #status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: var(--muted);
+      font-weight: 500;
+      color: var(--text-color);
       margin-top: 8px;
+      font-size: 0.95rem;
     }
+
+    .result {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: rgba(99, 102, 241, 0.1);
+      border-radius: 12px;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      display: inline-block;
+    }
+
     .scores {
-      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
+
     .score-row {
       display: grid;
-      grid-template-columns: 110px 1fr 90px;
-      gap: 12px;
+      grid-template-columns: 120px 1fr 60px;
+      gap: 16px;
       align-items: center;
-      margin-bottom: 8px;
+      padding: 8px 0;
     }
+
+    .score-label {
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .bar {
       width: 100%;
-      height: 16px;
-      background: #e5e7eb;
+      height: 12px;
+      background: var(--bar-bg);
       border-radius: 999px;
       overflow: hidden;
     }
+
     .bar > div {
       height: 100%;
-      background: #2563eb;
+      background: linear-gradient(90deg, var(--primary), #ec4899);
       width: 0%;
+      border-radius: 999px;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    #status {
-      min-height: 24px;
-      color: #444;
+
+    .score-value {
+      font-family: monospace;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--muted-text);
+      text-align: right;
     }
+
     audio {
       width: 100%;
-      margin-top: 12px;
+      height: 48px;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      border-radius: 24px;
     }
-    @media (prefers-color-scheme: dark) {
-      body { background: #0f172a; color: #e5e7eb; }
-      .card { background: #111827; box-shadow: none; }
-      .muted { background: #374151; color: #f3f4f6; }
-      #status { color: #cbd5e1; }
-      .bar { background: #374151; }
+
+    audio::-webkit-media-controls-panel {
+      background-color: var(--muted);
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>Speaker Recognition Demo</h1>
+      <h1>Speaker Recognition</h1>
       <p>Upload an audio file or record a short sample with your microphone. The backend will convert it to 16 kHz mono WAV, extract a speaker embedding, and compare it to your enrolled speakers.</p>
-      <div id="status">Ready.</div>
+      <div id="status"><i class="ph ph-info"></i> Ready.</div>
     </div>
 
     <div class="card">
-      <h2>Upload audio file</h2>
-      <input id="fileInput" type="file" accept="audio/*" />
-      <br />
-      <button id="uploadBtn" class="primary">Predict from file</button>
+      <h2><i class="ph ph-upload-simple"></i> Upload audio file</h2>
+      <div class="file-input-wrapper">
+        <input id="fileInput" type="file" accept="audio/*" />
+      </div>
+      <button id="uploadBtn" class="primary"><i class="ph ph-magic-wand"></i> Predict from file</button>
     </div>
 
     <div class="card">
-      <h2>Record from microphone</h2>
-      <button id="startBtn" class="primary">Start recording</button>
-      <button id="stopBtn" class="danger" disabled>Stop recording</button>
+      <h2><i class="ph ph-microphone"></i> Record from microphone</h2>
+      <div class="btn-group">
+        <button id="startBtn" class="primary"><i class="ph ph-record"></i> Start recording</button>
+        <button id="stopBtn" class="danger" disabled><i class="ph ph-stop"></i> Stop recording</button>
+      </div>
       <audio id="player" controls></audio>
-      <div style="margin-top: 10px;">
-        <button id="predictRecordingBtn" class="muted" disabled>Predict from recorded audio</button>
+      <div class="btn-group">
+        <button id="predictRecordingBtn" class="muted" disabled><i class="ph ph-magic-wand"></i> Predict from recorded audio</button>
       </div>
     </div>
 
     <div class="card">
-      <h2>Prediction</h2>
+      <h2><i class="ph ph-chart-bar"></i> Prediction</h2>
       <div id="prediction" class="result">No prediction yet.</div>
       <div id="scores" class="scores"></div>
     </div>
@@ -135,11 +355,11 @@
     let recordedBlob = null;
 
     function setStatus(msg) {
-      statusEl.textContent = msg;
+      statusEl.innerHTML = `<i class="ph ph-info"></i> ${msg}`;
     }
 
     function renderPrediction(data) {
-      predictionEl.textContent = `Predicted speaker: ${data.predicted_speaker}`;
+      predictionEl.innerHTML = `<i class="ph ph-check-circle"></i> Predicted speaker: <strong>${data.predicted_speaker}</strong>`;
       scoresEl.innerHTML = "";
 
       const ranking = data.ranking || [];
@@ -150,6 +370,7 @@
         row.className = "score-row";
 
         const label = document.createElement("div");
+        label.className = "score-label";
         label.textContent = item.speaker;
 
         const bar = document.createElement("div");
@@ -157,11 +378,15 @@
 
         const fill = document.createElement("div");
         const normalized = maxScore <= 0 ? 0 : (item.score / maxScore) * 100;
-        fill.style.width = `${Math.max(0, normalized)}%`;
+        fill.style.width = "0%";
+        setTimeout(() => {
+          fill.style.width = `${Math.max(0, normalized)}%`;
+        }, 50);
 
         bar.appendChild(fill);
 
         const value = document.createElement("div");
+        value.className = "score-value";
         value.textContent = item.score.toFixed(3);
 
         row.appendChild(label);
@@ -177,7 +402,7 @@
       form.append("file", blob, filename);
 
       setStatus("Sending audio to backend...");
-      predictionEl.textContent = "Working...";
+      predictionEl.innerHTML = `<i class="ph ph-spinner ph-spin"></i> Working...`;
       scoresEl.innerHTML = "";
 
       const response = await fetch("/predict", {
