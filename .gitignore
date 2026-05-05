@@ -216,3 +216,5 @@ pretrained_models/
 *.pkl
 *.csv
 !data/manifests/train.csv
+
+run.ps1
