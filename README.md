@@ -76,6 +76,8 @@ The repository also contains a small application with:
 
 ## Demo
 
+Click the image to view whole demo!
+
 [![Watch the demo](docs/assets/UA_IPFL_SpeakerRecognition_DEMO.gif)](https://youtu.be/zQ3wvk36CHo)
 
 ## Tech stack
