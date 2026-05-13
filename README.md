@@ -74,6 +74,10 @@ The repository also contains a small application with:
 - backend inference
 - predicted speaker + similarity scores
 
+## Demo
+
+[![Watch the demo](docs/assets/UA_IPFL_SpeakerRecognition_DEMO.gif)](https://youtu.be/DaZmJdNRS_I)
+
 ## Tech stack
 
 - Python
